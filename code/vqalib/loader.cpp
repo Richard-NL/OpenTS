@@ -296,20 +296,6 @@ long VQA_LoadFrame(VQAHandleP *vqap, long flags)
 }
 
 
-/* On-disk ADPCM stream-state record carried by the SN2J chunk. The fields are
- * packed (no padding) to match the 12-byte on-disk layout.
- */
-#pragma pack(push,1)
-struct VQASN2J {
-	short index;
-	long  predicted;
-	short index2;
-	long  predicted2;
-};
-static_assert(sizeof(VQASN2J) == 12, "the SN2J chunk is 12 bytes on disk");
-#pragma pack(pop)
-
-
 long VQA_LoadFrame_Internal(VQAHandleP *vqap, long flags)
 {
 	VQAConfig     *config;
