@@ -39,6 +39,10 @@ foreach(f ${OPENTS_RAW})
         endif()
     endforeach()
 
+    if(NOT WIN32 AND f MATCHES "\\.rc$")
+        set(EXCLUDED TRUE)
+    endif()
+
     if(NOT EXCLUDED)
         list(APPEND OPENTS_SRC "${f}")
     endif()
@@ -87,6 +91,19 @@ set_target_properties(OpenTS PROPERTIES
 #
 message(STATUS "${PROJECT_NAME}: Applying compiler flags...")
 
+if(OPENTS_EXPERIMENTAL_LINUX)
+# -msse2 -mfpmath=sse and -ffp-contract=off keep the floating-point results /arch:SSE2
+# /fp:precise gives the MSVC build. The inherited code type-puns through pointers, which
+# MSVC never treats as undefined.
+set(OPENTS_COMPILE_OPTIONS
+    -fms-extensions
+    -fno-strict-aliasing
+    -msse2 -mfpmath=sse -ffp-contract=off
+    -g
+    $<$<CONFIG:Debug>:-O0>
+    $<$<CONFIG:Release>:-O2>
+)
+else()
 set(OPENTS_COMPILE_OPTIONS
 
     # ================= DEBUG =================
@@ -124,6 +141,8 @@ set(OPENTS_COMPILE_OPTIONS
     >
 )
 
+endif()
+
 target_compile_options(OpenTS PRIVATE ${OPENTS_COMPILE_OPTIONS})
 
 #
@@ -151,12 +170,17 @@ set(OPENTS_BGFX_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/bgfxbackend.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/ui/rml/rmlrender.cpp"
 )
+# bx requires a conforming preprocessor, which only MSVC needs a switch for.
+set(OPENTS_BGFX_OPTIONS "/Zc:preprocessor")
+if(OPENTS_EXPERIMENTAL_LINUX)
+    set(OPENTS_BGFX_OPTIONS "")
+endif()
 set_source_files_properties(${OPENTS_BGFX_SOURCES} PROPERTIES
     INCLUDE_DIRECTORIES
         "${BGFX_ROOT}/include;${CMAKE_SOURCE_DIR}/thirdparty/bgfx.cmake/bx/include"
     COMPILE_DEFINITIONS
         "BX_CONFIG_DEBUG=$<IF:$<CONFIG:Debug>,1,$<BOOL:${BX_CONFIG_DEBUG}>>"
-    COMPILE_OPTIONS "/Zc:preprocessor"
+    COMPILE_OPTIONS "${OPENTS_BGFX_OPTIONS}"
 )
 
 # The frame quad's shaders come from the imgui example and the overlay's from the debug
@@ -194,8 +218,8 @@ set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ui/rml/rmltexture.cpp" APPEND P
 
 message(STATUS "${PROJECT_NAME}: Adding compilier definitions...")
 target_compile_definitions(OpenTS PRIVATE
-    WIN32
-    _WINDOWS
+    $<$<PLATFORM_ID:Windows>:WIN32>
+    $<$<PLATFORM_ID:Windows>:_WINDOWS>
     NOMINMAX
 )
 
@@ -227,6 +251,10 @@ target_link_libraries(OpenTS PRIVATE
     RmlUi::Core
     imgui
     SDL3::SDL3-static
+)
+
+if(WIN32)
+target_link_libraries(OpenTS PRIVATE
     comctl32
     dbghelp
     iphlpapi
@@ -237,6 +265,7 @@ target_link_libraries(OpenTS PRIVATE
     kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32
     odbc32 odbccp32
 )
+endif()
 
 if(MSVC)
     target_link_options(OpenTS PRIVATE
@@ -328,4 +357,6 @@ set_property(GLOBAL PROPERTY VS_STARTUP_PROJECT OpenTS)
 set(NATVIS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/sun.natvis")
 source_group("Natvis Files" FILES ${NATVIS_FILE})
 target_sources(OpenTS PRIVATE ${NATVIS_FILE})
-target_link_options(OpenTS PRIVATE "/NATVIS:${NATVIS_FILE}")
+if(MSVC)
+    target_link_options(OpenTS PRIVATE "/NATVIS:${NATVIS_FILE}")
+endif()

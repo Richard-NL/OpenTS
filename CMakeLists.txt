@@ -16,6 +16,7 @@ set(OPENTS_VERSION_LABEL "" CACHE STRING "Prerelease label to build with, such a
 option(OPENTS_OFFICIAL_BUILD "Build as an official release of the declared version" OFF)
 
 option(OPENTS_EXPERIMENTAL_CLANG_CL "Build with clang-cl using the MSVC ABI" OFF)
+option(OPENTS_EXPERIMENTAL_LINUX "Build natively for Linux with Clang" OFF)
 
 # Registers the tests that take over the desktop: they raise their own window, set the keyboard
 # state and move the pointer, and fail while another window holds the focus.
@@ -41,6 +42,12 @@ elseif(MSVC)
         message(FATAL_ERROR
             "OpenTS targets Win32 and x64. Reconfigure with -A Win32 or -A x64.")
     endif()
+elseif(OPENTS_EXPERIMENTAL_LINUX)
+    # The engine declares MSVC __declspec(property) members, which only Clang's
+    # -fms-extensions accepts outside MSVC.
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" OR NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "The unsupported Linux experiment requires Clang on Linux.")
+    endif()
 else()
     message(FATAL_ERROR
         "OpenTS requires the Visual Studio 2022 MSVC toolchain. "
@@ -53,7 +60,9 @@ if(NOT OPENTS_ARCH)
     set(OPENTS_ARCH "unknown")
 endif()
 
-enable_language(RC)
+if(WIN32)
+    enable_language(RC)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -106,7 +115,10 @@ add_custom_target(OpenTSBuildStamp ALL
 
 add_subdirectory(thirdparty)
 add_subdirectory(code)
-add_subdirectory(code/language)
+# The string table is a Windows resource library with no Linux equivalent yet.
+if(WIN32)
+    add_subdirectory(code/language)
+endif()
 
 enable_testing()
 add_subdirectory(tests)
