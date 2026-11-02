@@ -180,6 +180,29 @@ The toolchain requires `clang-cl`, `lld-link`, `llvm-lib`, `llvm-mt`, and
 `llvm-rc` on `PATH`. It exports `compile_commands.json`; one configuration in
 `.vscode/c_cpp_properties.clang.example.json` reads that file for IntelliSense.
 
+## Experimental native Linux build
+
+`OPENTS_EXPERIMENTAL_LINUX` configures a native Linux build with Clang for
+porting work. The engine does not compile in this configuration yet: most
+translation units still include Windows headers. It does not expand the
+supported build matrix.
+
+Clang is required because the engine declares MSVC `__declspec(property)`
+members, which Clang accepts with `-fms-extensions` and GCC rejects. The
+string-table library `Language.dll` is not built.
+
+```bash
+cmake -S . -B build/linux -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+  -DOPENTS_EXPERIMENTAL_LINUX=ON
+cmake --build build/linux -- -k 0
+```
+
+SDL needs its Linux development packages; its
+[build dependencies](https://wiki.libsdl.org/SDL3/README-linux#build-dependencies)
+list them. Without the XTest headers, add `-DSDL_X11_XTEST=OFF`.
+
 ## Build from Visual Studio Code
 
 With the recommended extensions installed, the repository provides:
