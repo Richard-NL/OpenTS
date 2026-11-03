@@ -25,3 +25,6 @@ using LPARAM = std::intptr_t;
 using LRESULT = std::intptr_t;
 using HWND = struct HWND__ *;
 using HINSTANCE = struct HINSTANCE__ *;
+using HDC = struct HDC__ *;
+using HBITMAP = struct HBITMAP__ *;
+using HGDIOBJ = void *;
