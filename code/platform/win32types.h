@@ -28,6 +28,8 @@ using HWND = struct HWND__ *;
 using HINSTANCE = struct HINSTANCE__ *;
 using HDC = struct HDC__ *;
 using HBITMAP = struct HBITMAP__ *;
+using HFONT = struct HFONT__ *;
+using HKL = struct HKL__ *;
 using HGDIOBJ = void *;
 using HANDLE = void *;
 
