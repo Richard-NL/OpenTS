@@ -33,6 +33,11 @@ using HKL = struct HKL__ *;
 using HGDIOBJ = void *;
 using HANDLE = void *;
 
+struct FILETIME {
+	DWORD dwLowDateTime;
+	DWORD dwHighDateTime;
+};
+
 #define FALSE 0
 #define TRUE 1
 
