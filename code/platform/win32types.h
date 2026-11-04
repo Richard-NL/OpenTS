@@ -33,3 +33,7 @@ using HANDLE = void *;
 
 #define FALSE 0
 #define TRUE 1
+
+// dialog results
+#define IDOK 1
+#define IDCANCEL 2
