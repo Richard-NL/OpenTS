@@ -30,3 +30,6 @@ using HDC = struct HDC__ *;
 using HBITMAP = struct HBITMAP__ *;
 using HGDIOBJ = void *;
 using HANDLE = void *;
+
+#define FALSE 0
+#define TRUE 1
