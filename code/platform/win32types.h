@@ -38,6 +38,9 @@ struct FILETIME {
 	DWORD dwHighDateTime;
 };
 
+// Only declared: nothing on Linux fills it, so code that reads its fields must be ported.
+struct WIN32_FIND_DATAA;
+
 #define FALSE 0
 #define TRUE 1
 
