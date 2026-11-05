@@ -17,10 +17,11 @@
 // INCLUDES
 //==========================================================================
 
+#include "always.h"
 #include "ccfile.h"
+#include "win.h"
 
 #include <vqaplay.h>
-#include <windows.h>
 
 //==========================================================================
 // PUBLIC FUNCTIONS
