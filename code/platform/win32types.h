@@ -19,6 +19,8 @@ using WORD = std::uint16_t;
 using DWORD = std::uint32_t;
 using BOOL = std::int32_t;
 using LONG = std::int32_t;
+using LONGLONG = std::int64_t;
+using ULONGLONG = std::uint64_t;
 using UINT = std::uint32_t;
 using WPARAM = std::uintptr_t;
 using LPARAM = std::intptr_t;
@@ -36,6 +38,22 @@ using HANDLE = void *;
 struct FILETIME {
 	DWORD dwLowDateTime;
 	DWORD dwHighDateTime;
+};
+
+union LARGE_INTEGER {
+	LONGLONG QuadPart;
+	struct {
+		DWORD LowPart;
+		LONG HighPart;
+	};
+};
+
+union ULARGE_INTEGER {
+	ULONGLONG QuadPart;
+	struct {
+		DWORD LowPart;
+		DWORD HighPart;
+	};
 };
 
 // Only declared: nothing on Linux fills it, so code that reads its fields must be ported.
