@@ -36,8 +36,9 @@
 
 #include "win.h"
 
+#include "platform/intrinsics.h"
+
 #include <float.h>
-#include <intrin.h>
 #include <math.h>
 
 typedef union {

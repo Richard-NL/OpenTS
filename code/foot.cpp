@@ -138,9 +138,10 @@
 #include "color.hh"
 #include "tube.hh"
 
+#include "platform/intrinsics.h"
+
 #include <algorithm>
 #include <cstring>
-#include <intrin.h>
 #include <iterator>
 
 

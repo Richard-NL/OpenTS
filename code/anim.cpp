@@ -94,9 +94,9 @@
 
 #include "bench.hh"
 
-#include <algorithm>
-#include <intrin.h>
+#include "platform/intrinsics.h"
 
+#include <algorithm>
 
 // A random rate range applies only when it is set and its minimum is not above its maximum.
 static int Pick_Anim_Rate(AnimSequence const & seq, int (*pick)(int, int))
