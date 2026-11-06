@@ -208,9 +208,9 @@
 
 #include "bench.hh"
 #include "tube.hh"
+#include "platform/intrinsics.h"
 
 #include <algorithm>
-#include <intrin.h>
 
 CDTimerClass<FrameTimerClass> TechnoClass::ActionLineTimer;
 bool TechnoClass::ActionLines = true;

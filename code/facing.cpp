@@ -40,9 +40,9 @@
 
 #include "syncrechook.h"
 
-#include <algorithm>
-#include <intrin.h>
+#include "platform/intrinsics.h"
 
+#include <algorithm>
 
 /***********************************************************************************************
  * FacingClass::FacingClass -- Default constructor for the facing class.                       *

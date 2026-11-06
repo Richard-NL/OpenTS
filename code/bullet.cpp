@@ -89,9 +89,9 @@
 #include "voxdrsys.h"
 #include "warhead.h"
 #include "weapon.h"
+#include "platform/intrinsics.h"
 
 #include <algorithm>
-#include <intrin.h>
 
 
 

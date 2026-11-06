@@ -94,9 +94,9 @@
 
 #include "bench.hh"
 
-#include <algorithm>
-#include <intrin.h>
+#include "platform/intrinsics.h"
 
+#include <algorithm>
 
 /***********************************************************************************************
  * AnimClass::AnimClass -- The constructor for animation objects.                              *

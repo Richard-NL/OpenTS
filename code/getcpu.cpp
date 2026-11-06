@@ -39,11 +39,10 @@
 #include "always.h"
 
 #include "getcpu.h"
+#include "platform/intrinsics.h"
 
 #include <cstdio>
 #include <cstring>
-
-#include <intrin.h>
 
 /***********************************************************************************************
  * Get_CPU_Type -- Find out what kind of CPU we are running on                                 *

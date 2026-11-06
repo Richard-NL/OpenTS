@@ -36,7 +36,8 @@
 
 #include "win.h"
 
-#include <intrin.h>
+#include "platform/intrinsics.h"
+
 #include <math.h>
 
 typedef union {
