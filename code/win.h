@@ -44,6 +44,7 @@
 #include <winuser.h>
 #else
 #include "platform/win32types.h"
+#include "platform/win32time.h"
 #endif
 
 extern HINSTANCE	ProgramInstance;
