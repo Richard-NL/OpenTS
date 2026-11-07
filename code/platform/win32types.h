@@ -41,6 +41,17 @@ struct FILETIME {
 	DWORD dwHighDateTime;
 };
 
+struct SYSTEMTIME {
+	WORD wYear;
+	WORD wMonth;
+	WORD wDayOfWeek;
+	WORD wDay;
+	WORD wHour;
+	WORD wMinute;
+	WORD wSecond;
+	WORD wMilliseconds;
+};
+
 union LARGE_INTEGER {
 	LONGLONG QuadPart;
 	struct {
