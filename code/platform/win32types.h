@@ -22,6 +22,7 @@ using LONG = std::int32_t;
 using LONGLONG = std::int64_t;
 using ULONGLONG = std::uint64_t;
 using UINT = std::uint32_t;
+using MMRESULT = UINT;
 using WPARAM = std::uintptr_t;
 using LPARAM = std::intptr_t;
 using LRESULT = std::intptr_t;

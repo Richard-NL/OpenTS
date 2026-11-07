@@ -18,3 +18,6 @@ BOOL QueryPerformanceCounter(LARGE_INTEGER * lpPerformanceCount);
 BOOL QueryPerformanceFrequency(LARGE_INTEGER * lpFrequency);
 DWORD timeGetTime();
 void Sleep(DWORD dwMilliseconds);
+MMRESULT timeBeginPeriod(UINT uPeriod);
+MMRESULT timeEndPeriod(UINT uPeriod);
+ULONGLONG GetTickCount64();

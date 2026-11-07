@@ -38,4 +38,22 @@ void Sleep(DWORD dwMilliseconds)
 	SDL_Delay(dwMilliseconds);
 }
 
+// Linux has no timer resolution setting; sleeps are already accurate to the millisecond.
+MMRESULT timeBeginPeriod(UINT)
+{
+	return 0;
+}
+
+
+MMRESULT timeEndPeriod(UINT)
+{
+	return 0;
+}
+
+
+ULONGLONG GetTickCount64()
+{
+	return SDL_GetTicks();
+}
+
 #endif
