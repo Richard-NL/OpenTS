@@ -62,6 +62,9 @@ struct WIN32_FIND_DATAA;
 #define FALSE 0
 #define TRUE 1
 
+// parameter annotations
+#define IN
+
 // dialog results
 #define IDOK 1
 #define IDCANCEL 2
