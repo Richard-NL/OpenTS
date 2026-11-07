@@ -119,6 +119,10 @@ class BackendCallback : public bgfx::CallbackI
 
 static BackendCallback _Callback;
 
+#ifndef _WIN32
+static bx::DefaultAllocator _DefaultAllocator;
+#endif
+
 
 // bgfx contains cache-line-aligned render records but requests their backing arrays with
 // the allocator's default alignment. The Win32 CRT only guarantees eight-byte alignment,
@@ -128,8 +132,9 @@ class BackendAllocator : public bx::AllocatorI
 	public:
 		virtual ~BackendAllocator(void) override {}
 
-		virtual void * realloc(void * ptr, size_t size, size_t alignment, const char *, uint32_t) override
+		virtual void * realloc(void * ptr, size_t size, size_t alignment, const char * file, uint32_t line) override
 		{
+#ifdef _WIN32
 			if (size == 0) {
 				_aligned_free(ptr);
 				return(NULL);
@@ -138,6 +143,11 @@ class BackendAllocator : public bx::AllocatorI
 			const size_t cachelinealignment = BX_CACHE_LINE_SIZE;
 			alignment = std::max(alignment, cachelinealignment);
 			return(_aligned_realloc(ptr, size, alignment));
+#else
+			const size_t cachelinealignment = BX_CACHE_LINE_SIZE;
+			alignment = std::max(alignment, cachelinealignment);
+			return(_DefaultAllocator.realloc(ptr, size, alignment, file, line));
+#endif
 		}
 };
 

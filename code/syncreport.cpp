@@ -91,6 +91,7 @@
 
 #include <cstdio>
 #include <float.h>
+#include <xmmintrin.h>
 
 
 namespace {
@@ -233,7 +234,11 @@ void Print_CRCs(EventClass const * events, int count, unsigned const * crc_ring,
 	}
 	fprintf(fp, "Seed: %08x\n", Seed);
 	fprintf(fp, "Session type: %d\n", Session.Type);
+#ifdef _WIN32
 	fprintf(fp, "FPU control word: %x\n", _controlfp(0, 0));
+#else
+	fprintf(fp, "SSE control word: %x\n", _mm_getcsr());
+#endif
 
 	int cpu_type = PROC_PENTIUM_PRO;
 	char vendor[32];
