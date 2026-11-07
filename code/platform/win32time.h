@@ -9,7 +9,7 @@
 
 #pragma once
 
-// Win32 timer functions the engine uses, for builds without <windows.h>.
+// Win32 timer and date functions the engine uses, for builds without <windows.h>.
 // SDL3 provides them in win32time.cpp.
 
 #include "platform/win32types.h"
@@ -21,3 +21,7 @@ void Sleep(DWORD dwMilliseconds);
 MMRESULT timeBeginPeriod(UINT uPeriod);
 MMRESULT timeEndPeriod(UINT uPeriod);
 ULONGLONG GetTickCount64();
+void GetSystemTimeAsFileTime(FILETIME * lpSystemTimeAsFileTime);
+void GetSystemTime(SYSTEMTIME * lpSystemTime);
+void GetLocalTime(SYSTEMTIME * lpSystemTime);
+BOOL SystemTimeToFileTime(const SYSTEMTIME * lpSystemTime, FILETIME * lpFileTime);
