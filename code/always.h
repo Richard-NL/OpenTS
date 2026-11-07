@@ -107,10 +107,11 @@
 #define _CONTROL   0x20  // space, first non-control character in ASCII
 
 #undef _stricmp
-#define stricmp  strcasecmp
-#define _stricmp strcasecmp
-#define strnicmp strncasecmp
-#define memicmp  strncasecmp
+#define stricmp   strcasecmp
+#define _stricmp  strcasecmp
+#define strnicmp  strncasecmp
+#define _strnicmp strncasecmp
+#define memicmp   strncasecmp
 #define __cdecl
 
 #include <cctype>
