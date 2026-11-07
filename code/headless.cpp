@@ -42,10 +42,15 @@ namespace Headless
 			Exception_Set_Unattended(true);
 			Main_Window_Set_Unattended(true);
 
+#if defined(_WIN32)
 			if (AttachConsole(ATTACH_PARENT_PROCESS)) {
 				FILE * stream = NULL;
 				IsConsoleAttached = freopen_s(&stream, "CONOUT$", "w", stderr) == 0;
 			}
+#else
+			// Off Windows, stderr is inherited from the process that started the game.
+			IsConsoleAttached = true;
+#endif
 		}
 	}
 
