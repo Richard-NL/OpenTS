@@ -73,7 +73,11 @@ bool Holdable_Key(int virtualkey)
 
 bool Windows_Holds(int virtualkey)
 {
+#ifdef _WIN32
 	return((GetKeyState(virtualkey) & 0x8000) != 0);
+#else
+	return(false);
+#endif
 }
 
 }
