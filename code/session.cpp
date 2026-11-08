@@ -80,7 +80,6 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime> // for station ID computation
-#include <dos.h> // for station ID computation
 #include <thread>
 #include <winsock.h> // for ntohl
 

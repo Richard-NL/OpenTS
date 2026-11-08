@@ -45,7 +45,20 @@
 #include	"vqaplayp.h"
 #include	<stdio.h>
 #include	<fcntl.h>
+#ifdef _WIN32
 #include	<io.h>
+#else
+#include	<sys/stat.h>
+#include	<unistd.h>
+
+#define	O_BINARY	0
+
+static long filelength(int fh)
+{
+	struct stat info;
+	return((fstat(fh, &info) != 0) ? -1 : info.st_size);
+}
+#endif
 #include	<string.h>
 
 
