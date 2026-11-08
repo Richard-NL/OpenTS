@@ -78,10 +78,12 @@ bool Layout_Position(SDL_Scancode scancode)
 }
 
 
+#ifdef _WIN32
 HKL Layout_Or_Current(HKL layout)
 {
 	return((layout != NULL) ? layout : GetKeyboardLayout(0));
 }
+#endif
 
 
 // The remaining keys take the code Windows gives the same position on a US layout.
@@ -171,6 +173,7 @@ int Virtual_Key_From_SDL(SDL_Scancode scancode, SDL_Keycode keycode, SDL_Keymod 
 	}
 
 	if (Layout_Position(scancode)) {
+#ifdef _WIN32
 		// Some layouts give an unused key 0xFF, which is no key.
 		if (raw != 0) {
 			key = (int)MapVirtualKeyExW(raw, MAPVK_VSC_TO_VK_EX, Layout_Or_Current(layout));
@@ -178,6 +181,7 @@ int Virtual_Key_From_SDL(SDL_Scancode scancode, SDL_Keycode keycode, SDL_Keymod 
 				return(key);
 			}
 		}
+#endif
 
 		key = Layout_Key(keycode);
 		if (key != 0) {
@@ -221,6 +225,7 @@ std::string Virtual_Key_Name(int virtualkey, HKL layout)
 	}
 
 	int const scancode = Scancode_Of(virtualkey);
+#ifdef _WIN32
 	if (scancode == SDL_SCANCODE_UNKNOWN || Layout_Position((SDL_Scancode)scancode)) {
 
 		// The top bit marks a dead key, which still prints its accent.
@@ -236,6 +241,7 @@ std::string Virtual_Key_Name(int virtualkey, HKL layout)
 			}
 		}
 	}
+#endif
 
 	if (scancode == SDL_SCANCODE_UNKNOWN) {
 		return(std::string());
