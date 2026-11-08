@@ -9,6 +9,7 @@
 
 #include "sdl/sdlkeys.h"
 
+#include "keyboard.hh"
 #include "win.h"
 
 #include <SDL3/SDL_keyboard.h>
