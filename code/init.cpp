@@ -205,9 +205,7 @@
 #include "scrnsel.hh"
 
 #include <algorithm>
-#include <conio.h>
 #include <ctime>
-#include <dos.h>
 #include <string>
 #include <unordered_set>
 #include <vector>
