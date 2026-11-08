@@ -9,6 +9,7 @@
 
 #include "sdl/sdlinput.h"
 
+#include "keyboard.hh"
 #include "sdl/sdlkeys.h"
 #include "win.h"
 #include "windowevent.hh"

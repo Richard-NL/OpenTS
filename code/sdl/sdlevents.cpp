@@ -9,6 +9,7 @@
 
 #include "sdl/sdlevents.h"
 
+#include "keyboard.hh"
 #include "sdl/sdlkeys.h"
 #include "utf8.h"
 #include "win.h"
