@@ -1691,7 +1691,6 @@ void Init_Random(void)
 	*/
 	if (Session.Type == GAME_NORMAL || Session.Type == GAME_SKIRMISH) {
 
-	#ifdef WIN32
 		/*
 		**	Gather some "random" bits from the system timer. Actually, only the
 		**	low order millisecond bits are secure. The other bits could be
@@ -1716,16 +1715,6 @@ void Init_Random(void)
 		CryptRandom.Seed_Bit(t.wDayOfWeek);
 		CryptRandom.Seed_Bit(t.wMonth);
 		CryptRandom.Seed_Bit(t.wYear);
-	#else
-
-		/*
-		**	Gather some "random" bits from the DOS mode timer.
-		*/
-		struct timeb t;
-		ftime(&t);
-		CryptRandom.Seed_Byte(t.millitm);
-		CryptRandom.Seed_Byte(t.time);
-	#endif
 
 		/*
 		**	Set the optional user-specified seed
