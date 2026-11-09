@@ -52,6 +52,12 @@ MMRESULT timeEndPeriod(UINT)
 }
 
 
+DWORD GetTickCount()
+{
+	return timeGetTime();
+}
+
+
 ULONGLONG GetTickCount64()
 {
 	return SDL_GetTicks();

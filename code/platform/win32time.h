@@ -21,6 +21,7 @@ void Sleep(DWORD dwMilliseconds);
 MMRESULT timeBeginPeriod(UINT uPeriod);
 MMRESULT timeEndPeriod(UINT uPeriod);
 ULONGLONG GetTickCount64();
+DWORD GetTickCount();
 void GetSystemTimeAsFileTime(FILETIME * lpSystemTimeAsFileTime);
 void GetSystemTime(SYSTEMTIME * lpSystemTime);
 void GetLocalTime(SYSTEMTIME * lpSystemTime);
