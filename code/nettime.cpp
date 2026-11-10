@@ -10,8 +10,12 @@
 
 #include "nettime.h"
 
+#ifdef _WIN32
 #include <windows.h>
 #include <mmsystem.h>
+#else
+#include "platform/win32time.h"
+#endif
 
 
 namespace NetTiming
