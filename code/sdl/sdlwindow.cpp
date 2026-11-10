@@ -17,7 +17,9 @@
 #include "sdl/sdlkeys.h"
 #include "win.h"
 
+#ifdef _WIN32
 #include <commctrl.h>
+#endif
 
 #define SDL_MAIN_HANDLED
 #include <SDL3/SDL.h>
@@ -47,7 +49,9 @@ SDL_Cursor * _SystemCursors[UI_CURSOR_COUNT];
 // when a window drag, a resize or the system menu ends.
 Uint32 _CaptureCancelled = 0;
 Uint32 _ModalLoopEnded = 0;
+#ifdef _WIN32
 UINT_PTR const WindowSubclass = 2;
+#endif
 
 
 void Set_Hint(char const * name, char const * value)
@@ -150,6 +154,7 @@ HWND Window_Handle(void)
 }
 
 
+#ifdef _WIN32
 void Post_Event(Uint32 type)
 {
 	if (type != 0) {
@@ -176,6 +181,7 @@ LRESULT CALLBACK Watch_Messages(HWND window, UINT message, WPARAM wparam, LPARAM
 	}
 	return(result);
 }
+#endif
 
 
 void Handle_SDL_Event(SDL_Event const & sdlevent)
@@ -277,15 +283,19 @@ bool Start_SDL(void)
 
 	Set_Hints();
 
+#ifdef _WIN32
 	// The window class keeps the game's own name, which tools looking for the window use.
 	if (!SDL_RegisterApp("Tiberian Sun", 0, ProgramInstance)) {
 		DebugString("SDL: the window class was not registered: %s\n", SDL_GetError());
 	}
+#endif
 	SDL_SetMainReady();
 
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		DebugString("SDL: video did not start: %s\n", SDL_GetError());
+#ifdef _WIN32
 		SDL_UnregisterApp();
+#endif
 		return(false);
 	}
 
@@ -348,13 +358,17 @@ void Main_Window_Destroy(void)
 	if (_Window != nullptr) {
 		SDL_RemoveEventWatch(Watch_Window, nullptr);
 		SDL_RemoveEventWatch(Watch_Keys, nullptr);
+#ifdef _WIN32
 		RemoveWindowSubclass(Window_Handle(), Watch_Messages, WindowSubclass);
+#endif
 		SDL_DestroyWindow(_Window);
 		_Window = nullptr;
 	}
 
 	SDL_Quit();
+#ifdef _WIN32
 	SDL_UnregisterApp();
+#endif
 	_Started = false;
 }
 
@@ -408,7 +422,9 @@ bool Main_Window_Create(bool windowed, int width, int height, MainWindowIcon con
 
 	SDL_AddEventWatch(Watch_Window, nullptr);
 	SDL_AddEventWatch(Watch_Keys, nullptr);
+#ifdef _WIN32
 	SetWindowSubclass(Window_Handle(), Watch_Messages, WindowSubclass, 0);
+#endif
 	_Input.Reset();
 
 	if (!_Unattended) {
