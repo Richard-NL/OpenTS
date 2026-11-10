@@ -81,7 +81,11 @@
 #include <chrono>
 #include <ctime> // for station ID computation
 #include <thread>
+#ifdef _WIN32
 #include <winsock.h> // for ntohl
+#else
+#include <arpa/inet.h>
+#endif
 
 
 /***************************** Globals *************************************/
