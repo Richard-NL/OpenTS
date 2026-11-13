@@ -11,6 +11,7 @@
 
 #include "dbgprint.h"
 #include "gamewindow.h"
+#include "keyboard.hh"
 #include "resource.h"
 #include "sdl/sdlevents.h"
 #include "sdl/sdlinput.h"
@@ -89,8 +90,14 @@ void Set_Hints(void)
 	Set_Hint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 	Set_Hint(SDL_HINT_MOUSE_AUTO_CAPTURE, "1");
 	Set_Hint(SDL_HINT_MOUSE_EMULATE_WARP_WITH_RELATIVE, "0");
+#ifdef _WIN32
 	Set_Hint(SDL_HINT_MOUSE_DOUBLE_CLICK_TIME, (int)GetDoubleClickTime());
 	Set_Hint(SDL_HINT_MOUSE_DOUBLE_CLICK_RADIUS, GetSystemMetrics(SM_CXDOUBLECLK) / 2);
+#else
+	// Windows' default double-click settings: 500 ms within a 4-pixel box.
+	Set_Hint(SDL_HINT_MOUSE_DOUBLE_CLICK_TIME, 500);
+	Set_Hint(SDL_HINT_MOUSE_DOUBLE_CLICK_RADIUS, 2);
+#endif
 	Set_Hint(SDL_HINT_KEYCODE_OPTIONS, "french_numbers,latin_letters");
 }
 
@@ -145,6 +152,7 @@ void Dispatch(WindowEvent const & event)
 }
 
 
+#ifdef _WIN32
 HWND Window_Handle(void)
 {
 	if (_Window == nullptr) {
@@ -154,7 +162,6 @@ HWND Window_Handle(void)
 }
 
 
-#ifdef _WIN32
 void Post_Event(Uint32 type)
 {
 	if (type != 0) {
@@ -571,20 +578,24 @@ void Main_Window_Pump_Events(void)
 
 void Main_Window_Request_Repaint(void)
 {
+#ifdef _WIN32
 	HWND const window = Window_Handle();
 	if (window != NULL) {
 		InvalidateRect(window, NULL, FALSE);
 	}
+#endif
 }
 
 
 // SDL_RaiseWindow would take the foreground from another program.
 void Main_Window_Take_Focus(void)
 {
+#ifdef _WIN32
 	HWND const window = Window_Handle();
 	if (window != NULL) {
 		SetFocus(window);
 	}
+#endif
 }
 
 
@@ -595,18 +606,24 @@ void Main_Window_Capture_Mouse(bool capture)
 	}
 	SDL_CaptureMouse(capture);
 
+#ifdef _WIN32
 	// SDL still records a capture Windows took away, so it does not ask for it again.
 	HWND const window = Window_Handle();
 	if (capture && (SDL_GetWindowFlags(_Window) & SDL_WINDOW_MOUSE_CAPTURE) != 0 && GetCapture() != window) {
 		SetCapture(window);
 	}
+#endif
 }
 
 
 bool Main_Window_Mouse_Captured(void)
 {
+#ifdef _WIN32
 	HWND const window = Window_Handle();
 	return(window != NULL && GetCapture() == window);
+#else
+	return(_Window != nullptr && (SDL_GetWindowFlags(_Window) & SDL_WINDOW_MOUSE_CAPTURE) != 0);
+#endif
 }
 
 
