@@ -106,10 +106,7 @@ static std::string DirectoryError;
 
 static void Report_Directory_Error(char const * what, std::string const & path)
 {
-	char message[MAX_PATH + 128];
-
-	sprintf(message, "The %s directory cannot be used:\n\n%s", what, path.c_str());
-	DirectoryError = message;
+	DirectoryError = std::string("The ") + what + " directory cannot be used:\n\n" + path;
 
 	DebugString("[GameDirs] %s directory unusable: %s.\n", what, path.c_str());
 	printf("The %s directory cannot be used: %s\n", what, path.c_str());
@@ -124,9 +121,17 @@ char const * Game_Directory_Error(void)
 
 static bool Is_Directory(std::string const & path)
 {
-	DWORD attributes = GetFileAttributes(path.c_str());
+	std::error_code error;
 
-	return(attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0);
+	return(std::filesystem::is_directory(path, error));
+}
+
+
+static bool Create_Directory(std::string const & path)
+{
+	std::error_code error;
+
+	return(std::filesystem::create_directory(path, error));
 }
 
 
@@ -224,7 +229,7 @@ std::vector<std::string> Parse_Search_Folders(char const * list)
 bool Apply_Game_Directories(void)
 {
 	if (!UserDirectory.empty()) {
-		if (!Is_Directory(UserDirectory) && !CreateDirectory(UserDirectory.c_str(), NULL)) {
+		if (!Is_Directory(UserDirectory) && !Create_Directory(UserDirectory)) {
 			Report_Directory_Error("user", UserDirectory);
 			return(false);
 		}
@@ -275,7 +280,7 @@ static std::string Own_Folder_Name(char const * folder, char const * filename)
 {
 	std::string const path = UserDirectory + folder;
 
-	CreateDirectory(path.c_str(), NULL);
+	Create_Directory(path);
 
 	return(path + (char)std::filesystem::path::preferred_separator + filename);
 }
