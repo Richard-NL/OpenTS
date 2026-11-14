@@ -183,9 +183,9 @@ The toolchain requires `clang-cl`, `lld-link`, `llvm-lib`, `llvm-mt`, and
 ## Experimental native Linux build
 
 `OPENTS_EXPERIMENTAL_LINUX` configures a native Linux build with Clang for
-porting work. The engine does not compile in this configuration yet: most
-translation units still include Windows headers. It does not expand the
-supported build matrix.
+porting work. The engine does not compile in this configuration yet: some
+translation units still use Win32 functions and types that have no Linux
+replacement. It does not expand the supported build matrix.
 
 Clang is required because the engine declares MSVC `__declspec(property)`
 members, which Clang accepts with `-fms-extensions` and GCC rejects. The
@@ -201,7 +201,10 @@ cmake --build build/linux -- -k 0
 
 SDL needs its Linux development packages; its
 [build dependencies](https://wiki.libsdl.org/SDL3/README-linux#build-dependencies)
-list them. Without the XTest headers, add `-DSDL_X11_XTEST=OFF`.
+list them. Without the XTest headers, add `-DSDL_X11_XTEST=OFF`. The
+bundled SDL's Wayland backend needs wayland 1.24 or later; on an older
+system, such as Ubuntu 24.04, add `-DSDL_WAYLAND=OFF` so that SDL builds only
+its X11 backend.
 
 ## Build from Visual Studio Code
 
