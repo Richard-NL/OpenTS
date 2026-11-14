@@ -26,6 +26,8 @@ class Find_File_Data
 		virtual const char * GetName() const = 0;
 		virtual const char * GetFullName() const { return nullptr; };
 		virtual unsigned int GetTime() const = 0;
+		// True for an ordinary file: not a folder, not hidden, and on Windows not a system or temporary file.
+		virtual bool IsPlainFile() const = 0;
 
 		virtual bool FindFirst(const char * fname) = 0;
 		virtual bool FindNext() = 0;
