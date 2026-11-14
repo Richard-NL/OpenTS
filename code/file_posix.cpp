@@ -36,6 +36,7 @@ class Find_File_Data_Posix : public Find_File_Data
 		virtual const char * GetName() const;
 		virtual const char * GetFullName() const { return DirEntry != nullptr ? FullName : nullptr; }
 		virtual unsigned int GetTime() const;
+		virtual bool IsPlainFile() const;
 
 		virtual bool FindFirst(const char * fname);
 		virtual bool FindNext();
@@ -76,6 +77,15 @@ unsigned int Find_File_Data_Posix::GetTime() const
 		return false;
 	}
 	return buf.st_mtime;
+}
+
+bool Find_File_Data_Posix::IsPlainFile() const
+{
+	if (DirEntry == nullptr || DirEntry->d_name[0] == '.') {
+		return false;
+	}
+	struct stat buf;
+	return stat(FullName, &buf) == 0 && S_ISREG(buf.st_mode);
 }
 
 bool Find_File_Data_Posix::FindNextWithFilter()

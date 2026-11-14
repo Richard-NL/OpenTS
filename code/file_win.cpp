@@ -27,6 +27,7 @@ class Find_File_Data_Win : public Find_File_Data
 
 		virtual const char * GetName() const;
 		virtual unsigned int GetTime() const;
+		virtual bool IsPlainFile() const;
 
 		virtual bool FindFirst(const char * fname);
 		virtual bool FindNext();
@@ -55,6 +56,12 @@ unsigned int Find_File_Data_Win::GetTime() const
 	ull.LowPart = FindData.ftLastWriteTime.dwLowDateTime;
 	ull.HighPart = FindData.ftLastWriteTime.dwHighDateTime;
 	return (unsigned int)(ull.QuadPart / 10000000ULL - 11644473600ULL);
+}
+
+bool Find_File_Data_Win::IsPlainFile() const
+{
+	DWORD const skipped = FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_TEMPORARY;
+	return (FindData.dwFileAttributes & skipped) == 0;
 }
 
 bool Find_File_Data_Win::FindFirst(const char * fname)

@@ -13,11 +13,12 @@
 
 #include "cdfile.h"
 #include "dbgprint.h"
+#include "file.h"
 
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
-#include <windows.h>
+#include <memory>
 
 /*
  * The directories the command line named. Empty means the game's own directory, so an
@@ -311,31 +312,28 @@ static void Scan_Folder(char const * prefix, char const * pattern, std::vector<s
 {
 	std::string const search = std::string(prefix) + pattern;
 
-	WIN32_FIND_DATA block;
-	HANDLE handle = FindFirstFile(search.c_str(), &block);
-	if (handle == INVALID_HANDLE_VALUE) {
+	std::unique_ptr<Find_File_Data> block(Find_File_Data::CreateFindData());
+	if (!block->FindFirst(search.c_str())) {
 		return;
 	}
 
 	do {
-		if ((block.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM|FILE_ATTRIBUTE_TEMPORARY)) != 0) {
+		if (!block->IsPlainFile()) {
 			continue;
 		}
 
 		bool present = false;
 		for (std::string const & existing : names) {
-			if (Is_Same_Path(existing, block.cFileName)) {
+			if (Is_Same_Path(existing, block->GetName())) {
 				present = true;
 				break;
 			}
 		}
 
 		if (!present) {
-			names.push_back(block.cFileName);
+			names.push_back(block->GetName());
 		}
-	} while (FindNextFile(handle, &block));
-
-	FindClose(handle);
+	} while (block->FindNext());
 }
 
 
