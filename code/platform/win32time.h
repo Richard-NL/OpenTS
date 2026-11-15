@@ -10,7 +10,6 @@
 #pragma once
 
 // Win32 timer and date functions the engine uses, for builds without <windows.h>.
-// SDL3 provides them in win32time.cpp.
 
 #include "platform/win32types.h"
 
