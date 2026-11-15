@@ -12,32 +12,31 @@
 #include "platform/win32time.h"
 
 #include <SDL3/SDL_time.h>
-#include <SDL3/SDL_timer.h>
+
+#include <chrono>
+
+using Counter_Unit = std::chrono::nanoseconds;
 
 BOOL QueryPerformanceCounter(LARGE_INTEGER * lpPerformanceCount)
 {
-	lpPerformanceCount->QuadPart = static_cast<LONGLONG>(SDL_GetPerformanceCounter());
+	auto const now = std::chrono::steady_clock::now().time_since_epoch();
+	lpPerformanceCount->QuadPart = std::chrono::duration_cast<Counter_Unit>(now).count();
 	return TRUE;
 }
 
 
 BOOL QueryPerformanceFrequency(LARGE_INTEGER * lpFrequency)
 {
-	lpFrequency->QuadPart = static_cast<LONGLONG>(SDL_GetPerformanceFrequency());
+	lpFrequency->QuadPart = Counter_Unit::period::den;
 	return TRUE;
 }
 
 
 DWORD timeGetTime()
 {
-	return static_cast<DWORD>(SDL_GetTicks());
+	return static_cast<DWORD>(GetTickCount64());
 }
 
-
-void Sleep(DWORD dwMilliseconds)
-{
-	SDL_Delay(dwMilliseconds);
-}
 
 // Linux has no timer resolution setting; sleeps are already accurate to the millisecond.
 MMRESULT timeBeginPeriod(UINT)
@@ -60,7 +59,8 @@ DWORD GetTickCount()
 
 ULONGLONG GetTickCount64()
 {
-	return SDL_GetTicks();
+	auto const now = std::chrono::steady_clock::now().time_since_epoch();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
 }
 
 
