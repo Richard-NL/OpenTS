@@ -11,11 +11,14 @@
 
 #include "platform/win32time.h"
 
-#include <SDL3/SDL_time.h>
-
 #include <chrono>
+#include <ctime>
 
 using Counter_Unit = std::chrono::nanoseconds;
+
+// A FILETIME counts 100-nanosecond intervals from 1601-01-01 UTC, 11644473600 seconds before 1970.
+using File_Time_Unit = std::chrono::duration<LONGLONG, std::ratio<1, 10000000>>;
+constexpr std::chrono::seconds File_Time_Epoch_Offset{11644473600};
 
 BOOL QueryPerformanceCounter(LARGE_INTEGER * lpPerformanceCount)
 {
@@ -66,27 +69,39 @@ ULONGLONG GetTickCount64()
 
 static void Fill_System_Time(SYSTEMTIME * out, bool local)
 {
-	SDL_Time ticks = 0;
-	SDL_DateTime dt = {};
-	if (SDL_GetCurrentTime(&ticks)) {
-		SDL_TimeToDateTime(ticks, &dt, local);
+	auto const now = std::chrono::system_clock::now();
+	std::time_t const seconds = std::chrono::system_clock::to_time_t(now);
+	std::tm fields = {};
+	if (local) {
+		localtime_r(&seconds, &fields);
+	} else {
+		gmtime_r(&seconds, &fields);
 	}
-	out->wYear = static_cast<WORD>(dt.year);
-	out->wMonth = static_cast<WORD>(dt.month);
-	out->wDayOfWeek = static_cast<WORD>(dt.day_of_week);
-	out->wDay = static_cast<WORD>(dt.day);
-	out->wHour = static_cast<WORD>(dt.hour);
-	out->wMinute = static_cast<WORD>(dt.minute);
-	out->wSecond = static_cast<WORD>(dt.second);
-	out->wMilliseconds = static_cast<WORD>(dt.nanosecond / 1000000);
+	auto const subsecond = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+
+	out->wYear = static_cast<WORD>(fields.tm_year + 1900);
+	out->wMonth = static_cast<WORD>(fields.tm_mon + 1);
+	out->wDayOfWeek = static_cast<WORD>(fields.tm_wday);
+	out->wDay = static_cast<WORD>(fields.tm_mday);
+	out->wHour = static_cast<WORD>(fields.tm_hour);
+	out->wMinute = static_cast<WORD>(fields.tm_min);
+	out->wSecond = static_cast<WORD>(fields.tm_sec);
+	out->wMilliseconds = static_cast<WORD>(subsecond.count());
+}
+
+
+static void Write_File_Time(std::chrono::system_clock::time_point time, FILETIME * out)
+{
+	auto const since_1601 = std::chrono::duration_cast<File_Time_Unit>(time.time_since_epoch()) + File_Time_Epoch_Offset;
+	LONGLONG const ticks = since_1601.count();
+	out->dwLowDateTime = static_cast<DWORD>(ticks);
+	out->dwHighDateTime = static_cast<DWORD>(ticks >> 32);
 }
 
 
 void GetSystemTimeAsFileTime(FILETIME * out)
 {
-	SDL_Time ticks = 0;
-	SDL_GetCurrentTime(&ticks);
-	SDL_TimeToWindows(ticks, &out->dwLowDateTime, &out->dwHighDateTime);
+	Write_File_Time(std::chrono::system_clock::now(), out);
 }
 
 
@@ -104,21 +119,19 @@ void GetLocalTime(SYSTEMTIME * out)
 
 BOOL SystemTimeToFileTime(const SYSTEMTIME * in, FILETIME * out)
 {
-	SDL_DateTime dt = {};
-	dt.year = in->wYear;
-	dt.month = in->wMonth;
-	dt.day = in->wDay;
-	dt.day_of_week = in->wDayOfWeek;
-	dt.hour = in->wHour;
-	dt.minute = in->wMinute;
-	dt.second = in->wSecond;
-	dt.nanosecond = in->wMilliseconds * 1000000;
-	SDL_Time ticks = 0;
-	if (!SDL_DateTimeToTime(&dt, &ticks)) {
+	if (in->wYear < 1601 || in->wYear > 30827 || in->wMonth > 12 || in->wDay > 31
+		|| in->wHour > 23 || in->wMinute > 59 || in->wSecond > 59 || in->wMilliseconds > 999) {
 		return FALSE;
 	}
 
-	SDL_TimeToWindows(ticks, &out->dwLowDateTime, &out->dwHighDateTime);
+	std::chrono::year_month_day const date{std::chrono::year{in->wYear}, std::chrono::month{in->wMonth}, std::chrono::day{in->wDay}};
+	if (!date.ok()) {
+		return FALSE;
+	}
+
+	auto const time = std::chrono::sys_days{date} + std::chrono::hours{in->wHour} + std::chrono::minutes{in->wMinute}
+		+ std::chrono::seconds{in->wSecond} + std::chrono::milliseconds{in->wMilliseconds};
+	Write_File_Time(time, out);
 
 	return TRUE;
 }
