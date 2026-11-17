@@ -59,7 +59,6 @@ static std::atomic<std::thread::id> DebugLockOwner;
 static bool DebugInitDone = false;
 static bool AtLineStart = true;
 static bool ConsoleActive = false;
-static HANDLE DebugFile = INVALID_HANDLE_VALUE;
 static HANDLE DebugConsole = INVALID_HANDLE_VALUE;
 static char DebugDirectory[MAX_PATH];
 static char DebugFileName[MAX_PATH];
@@ -278,23 +277,22 @@ static void Init_Locked(void)
 				now.wDay, now.wMonth, now.wYear, now.wHour, now.wMinute, now.wSecond);
 
 	if (DebugDirectory[0] != '\0'
-		&& (CreateDirectory(DebugDirectory, NULL) || GetLastError() == ERROR_ALREADY_EXISTS)) {
+		&& Debug_Make_Directory(DebugDirectory)) {
 
 		Delete_Files_Older_Than(DebugDirectory, "DEBUG_*.LOG", DEBUG_LOG_MAX_AGE_DAYS);
 
-		snprintf(DebugFileName, sizeof(DebugFileName), "%s\\DEBUG_%s.LOG", DebugDirectory, timestamp);
-		DebugFile = CreateFile(DebugFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-										CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+		snprintf(DebugFileName, sizeof(DebugFileName), "%s%cDEBUG_%s.LOG", DebugDirectory,
+					DEBUG_PATH_SEPARATOR, timestamp);
+		Debug_Log_Open(DebugFileName);
 
 		// A second process started in the same second must not disturb the first one's log.
-		if (DebugFile == INVALID_HANDLE_VALUE) {
-			snprintf(DebugFileName, sizeof(DebugFileName), "%s\\DEBUG_%s_%lu.LOG",
-						DebugDirectory, timestamp, Debug_Process_ID());
-			DebugFile = CreateFile(DebugFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-											CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (!Debug_Log_Is_Open()) {
+			snprintf(DebugFileName, sizeof(DebugFileName), "%s%cDEBUG_%s_%lu.LOG",
+						DebugDirectory, DEBUG_PATH_SEPARATOR, timestamp, Debug_Process_ID());
+			Debug_Log_Open(DebugFileName);
 		}
 
-		if (DebugFile == INVALID_HANDLE_VALUE) {
+		if (!Debug_Log_Is_Open()) {
 			DebugFileName[0] = '\0';
 		}
 	}
@@ -315,15 +313,14 @@ static void Write_Text_Locked(char const * text, size_t length)
 {
 	DWORD actual;
 
-	if (DebugFile != INVALID_HANDLE_VALUE) {
+	if (Debug_Log_Is_Open()) {
 
 		// The notice is paid for out of the reserve, so the file never passes its limit.
 		if (DebugBytesWritten + length > DEBUG_LOG_BUDGET) {
-			WriteFile(DebugFile, DebugTruncationNotice, (DWORD)DEBUG_LOG_NOTICE_RESERVE, &actual, NULL);
-			CloseHandle(DebugFile);
-			DebugFile = INVALID_HANDLE_VALUE;
+			Debug_Log_Write(DebugTruncationNotice, (size_t)DEBUG_LOG_NOTICE_RESERVE);
+			Debug_Log_Close();
 		} else {
-			WriteFile(DebugFile, text, (DWORD)length, &actual, NULL);
+			Debug_Log_Write(text, length);
 			DebugBytesWritten += length;
 		}
 	}

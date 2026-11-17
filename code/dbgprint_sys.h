@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 // dbgprint_win.cpp and dbgprint_posix.cpp each define these; only one is built.
 unsigned long Debug_Process_ID(void);
 // The thread's Win32 error code. Off Windows it is always 0, and setting it does nothing.
@@ -16,3 +18,15 @@ unsigned long Debug_Last_Error(void);
 void Debug_Set_Last_Error(unsigned long error);
 // Off Windows this does nothing.
 void Debug_Write_To_Debugger(char const * text);
+
+// The character between a folder and a file name in the paths below.
+extern char const DEBUG_PATH_SEPARATOR;
+// True when the folder exists afterwards, whether or not this call created it.
+bool Debug_Make_Directory(char const * path);
+
+// The log file. Call these with the logging lock held. Opening leaves the log closed when
+// the file already exists or cannot be created; an existing file is never overwritten.
+void Debug_Log_Open(char const * path);
+bool Debug_Log_Is_Open(void);
+void Debug_Log_Write(char const * text, size_t length);
+void Debug_Log_Close(void);
