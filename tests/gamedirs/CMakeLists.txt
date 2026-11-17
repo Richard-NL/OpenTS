@@ -14,6 +14,8 @@ opents_add_test(GameDirs
         file_posix.cpp
         file_win.cpp
         dbgprint.cpp
+        dbgprint_posix.cpp
+        dbgprint_win.cpp
         ini.cpp
         utf8.cpp
         b64pipe.cpp

@@ -11,6 +11,8 @@ opents_add_test(ThemeIni
         ini.cpp
         utf8.cpp
         dbgprint.cpp
+        dbgprint_posix.cpp
+        dbgprint_win.cpp
         b64pipe.cpp
         b64straw.cpp
         base64.cpp

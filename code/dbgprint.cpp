@@ -14,6 +14,7 @@
 #include "always.h"
 
 #include "dbgprint.h"
+#include "dbgprint_sys.h"
 
 #include "opents_build.h"
 #include "win.h"
@@ -288,7 +289,7 @@ static void Init_Locked(void)
 		// A second process started in the same second must not disturb the first one's log.
 		if (DebugFile == INVALID_HANDLE_VALUE) {
 			snprintf(DebugFileName, sizeof(DebugFileName), "%s\\DEBUG_%s_%lu.LOG",
-						DebugDirectory, timestamp, GetCurrentProcessId());
+						DebugDirectory, timestamp, Debug_Process_ID());
 			DebugFile = CreateFile(DebugFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
 											CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 		}
@@ -327,11 +328,7 @@ static void Write_Text_Locked(char const * text, size_t length)
 		}
 	}
 
-	// Reporting to a debugger that is not there costs an exception round trip per message,
-	// which is far more than the rest of this function put together.
-	if (IsDebuggerPresent()) {
-		OutputDebugString(text);
-	}
+	Debug_Write_To_Debugger(text);
 
 	if (ConsoleActive) {
 		if (DebugConsole != INVALID_HANDLE_VALUE) {
@@ -481,9 +478,7 @@ static void Emit(char const * buffer, bool with_prefix)
 	// A fault raised inside a logging call brings the handler back here on the same thread,
 	// where taking the lock again would deadlock. Such a message reaches the debugger only.
 	if (DebugLockOwner == self) {
-		if (IsDebuggerPresent()) {
-			OutputDebugString(buffer);
-		}
+		Debug_Write_To_Debugger(buffer);
 		return;
 	}
 
@@ -581,7 +576,7 @@ char const * Debug_Directory(void)
 void __cdecl DebugString(char const * string, ...)
 {
 	// Callers report an error and then branch on it, so logging must not disturb it.
-	DWORD const last_error = GetLastError();
+	unsigned long const last_error = Debug_Last_Error();
 	int const last_errno = errno;
 
 	char buffer[DEBUG_MESSAGE_MAX];
@@ -594,7 +589,7 @@ void __cdecl DebugString(char const * string, ...)
 	Emit(buffer, true);
 
 	errno = last_errno;
-	SetLastError(last_error);
+	Debug_Set_Last_Error(last_error);
 }
 
 
@@ -606,7 +601,7 @@ void __cdecl DebugString(char const * string, ...)
 /// <param name="string">The printf style format string to report.</param>
 void __cdecl DebugStringNoPrefix(char const * string, ...)
 {
-	DWORD const last_error = GetLastError();
+	unsigned long const last_error = Debug_Last_Error();
 	int const last_errno = errno;
 
 	char buffer[DEBUG_MESSAGE_MAX];
@@ -619,7 +614,7 @@ void __cdecl DebugStringNoPrefix(char const * string, ...)
 	Emit(buffer, false);
 
 	errno = last_errno;
-	SetLastError(last_error);
+	Debug_Set_Last_Error(last_error);
 }
 
 

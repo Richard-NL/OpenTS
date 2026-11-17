@@ -15,6 +15,8 @@ opents_add_test(MixOrder
         file_posix.cpp
         file_win.cpp
         dbgprint.cpp
+        dbgprint_posix.cpp
+        dbgprint_win.cpp
         buff.cpp
         crc.cpp
         cstraw.cpp
