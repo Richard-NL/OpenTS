@@ -119,53 +119,7 @@ bool Delete_Files_Older_Than(char const * directory, char const * pattern, unsig
 		return(false);
 	}
 
-	SYSTEMTIME now;
-	FILETIME now_stamp;
-	GetSystemTime(&now);
-	if (!SystemTimeToFileTime(&now, &now_stamp)) {
-		return(false);
-	}
-
-	ULARGE_INTEGER cutoff;
-	cutoff.LowPart = now_stamp.dwLowDateTime;
-	cutoff.HighPart = now_stamp.dwHighDateTime;
-
-	unsigned __int64 const age = (unsigned __int64)days * 24ui64 * 60ui64 * 60ui64 * 10000000ui64;
-	if (cutoff.QuadPart < age) {
-		return(false);
-	}
-	cutoff.QuadPart -= age;
-
-	char search[MAX_PATH];
-	snprintf(search, sizeof(search), "%s\\%s", directory, pattern);
-
-	WIN32_FIND_DATA found;
-	HANDLE search_handle = FindFirstFile(search, &found);
-	if (search_handle == INVALID_HANDLE_VALUE) {
-		return(false);
-	}
-
-	do {
-		if ((found.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
-			continue;
-		}
-
-		ULARGE_INTEGER written;
-		written.LowPart = found.ftLastWriteTime.dwLowDateTime;
-		written.HighPart = found.ftLastWriteTime.dwHighDateTime;
-
-		if (written.QuadPart == 0 || written.QuadPart >= cutoff.QuadPart) {
-			continue;
-		}
-
-		char victim[MAX_PATH];
-		snprintf(victim, sizeof(victim), "%s\\%s", directory, found.cFileName);
-		DeleteFile(victim);
-
-	} while (FindNextFile(search_handle, &found));
-
-	FindClose(search_handle);
-	return(true);
+	return(Debug_Delete_Files_Older_Than(directory, pattern, days));
 }
 
 

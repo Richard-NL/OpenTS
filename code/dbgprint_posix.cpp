@@ -13,7 +13,11 @@
 #include "dbgprint_sys.h"
 
 #include <cerrno>
+#include <ctime>
+#include <dirent.h>
 #include <fcntl.h>
+#include <fnmatch.h>
+#include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -71,5 +75,43 @@ void Debug_Log_Close(void)
 {
 	close(DebugFile);
 	DebugFile = -1;
+}
+
+
+bool Debug_Delete_Files_Older_Than(char const * directory, char const * pattern, unsigned days)
+{
+	time_t const now = time(nullptr);
+	time_t const age = static_cast<time_t>(days) * 24 * 60 * 60;
+	if (now < age) {
+		return(false);
+	}
+	time_t const cutoff = now - age;
+
+	DIR * listing = opendir(directory);
+	if (listing == nullptr) {
+		return(false);
+	}
+
+	while (dirent const * entry = readdir(listing)) {
+		if (fnmatch(pattern, entry->d_name, 0) != 0) {
+			continue;
+		}
+
+		std::string const path = std::string(directory) + DEBUG_PATH_SEPARATOR + entry->d_name;
+
+		struct stat info;
+		if (lstat(path.c_str(), &info) != 0 || !S_ISREG(info.st_mode)) {
+			continue;
+		}
+
+		if (info.st_mtime == 0 || info.st_mtime >= cutoff) {
+			continue;
+		}
+
+		unlink(path.c_str());
+	}
+
+	closedir(listing);
+	return(true);
 }
 #endif

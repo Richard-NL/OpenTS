@@ -30,3 +30,8 @@ void Debug_Log_Open(char const * path);
 bool Debug_Log_Is_Open(void);
 void Debug_Log_Write(char const * text, size_t length);
 void Debug_Log_Close(void);
+
+// Deletes the files in the folder whose names match the pattern and that were last written
+// more than the given number of days ago; folders are skipped. False when the folder cannot
+// be searched, and on Windows also when no file matches.
+bool Debug_Delete_Files_Older_Than(char const * directory, char const * pattern, unsigned days);
