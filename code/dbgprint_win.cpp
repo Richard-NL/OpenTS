@@ -132,4 +132,10 @@ bool Debug_Delete_Files_Older_Than(char const * directory, char const * pattern,
 	FindClose(search_handle);
 	return(true);
 }
+
+
+bool Debug_Executable_Path(char * path, size_t size)
+{
+	return(GetModuleFileName(GetModuleHandle(NULL), path, static_cast<DWORD>(size)) != 0);
+}
 #endif

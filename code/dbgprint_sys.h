@@ -35,3 +35,7 @@ void Debug_Log_Close(void);
 // more than the given number of days ago; folders are skipped. False when the folder cannot
 // be searched, and on Windows also when no file matches.
 bool Debug_Delete_Files_Older_Than(char const * directory, char const * pattern, unsigned days);
+
+// Writes the executable's full path. False when it cannot be read. A path that does not fit is
+// cut short on Windows and gives false elsewhere.
+bool Debug_Executable_Path(char * path, size_t size);

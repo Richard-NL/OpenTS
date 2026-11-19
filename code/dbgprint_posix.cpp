@@ -114,4 +114,17 @@ bool Debug_Delete_Files_Older_Than(char const * directory, char const * pattern,
 	closedir(listing);
 	return(true);
 }
+
+
+bool Debug_Executable_Path(char * path, size_t size)
+{
+	ssize_t const length = readlink("/proc/self/exe", path, size);
+
+	// A full buffer may hold a cut-off path, so it counts as a failure like -1 does.
+	if (length < 0 || static_cast<size_t>(length) >= size) {
+		return(false);
+	}
+	path[length] = '\0';
+	return(true);
+}
 #endif

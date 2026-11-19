@@ -218,7 +218,7 @@ static void Init_Locked(void)
 	char dir[_MAX_DIR];
 
 	// The log belongs beside the executable, which is not yet the current directory.
-	if (GetModuleFileName(GetModuleHandle(NULL), path_to_exe, sizeof(path_to_exe)) != 0) {
+	if (Debug_Executable_Path(path_to_exe, sizeof(path_to_exe))) {
 		_splitpath(path_to_exe, drive, dir, NULL, NULL);
 		snprintf(DebugDirectory, sizeof(DebugDirectory), "%s%sDebug", drive, dir);
 	}
