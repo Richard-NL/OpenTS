@@ -16,6 +16,7 @@
 
 #include "dbgprint_sys.h"
 
+#include <cstdio>
 #include <windows.h>
 
 char const DEBUG_PATH_SEPARATOR = '\\';
