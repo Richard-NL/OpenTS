@@ -25,7 +25,7 @@ files = [
     "mono", "mpmath", "mpu", "mstimer", "obscure", "pipe", "pk", "pkpipe", "pkstraw",
     "protowire", "quat", "ramfile", "random", "rawfile", "rndstraw", "savefile", "savestream",
     "savever", "sha", "sha256", "shapipe", "shastraw", "stbuffer", "stimer", "straw", "swizzle",
-    "trim", "utf8", "version", "wstring", "xpipe", "xstraw",
+    "trim", "utf8", "version", "win32time", "wstring", "xpipe", "xstraw",
 ]
 
 # Window, input, sockets, and the crash handler.
