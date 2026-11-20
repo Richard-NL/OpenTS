@@ -13,6 +13,7 @@
 #include "dbgprint_sys.h"
 
 #include <cerrno>
+#include <cstdio>
 #include <ctime>
 #include <dirent.h>
 #include <fcntl.h>
@@ -27,7 +28,6 @@
 #include <climits>
 #include <crt_externs.h>
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
 #include <mach-o/dyld.h>
 #elif defined(__FreeBSD__)
@@ -36,6 +36,7 @@
 #endif
 
 char const DEBUG_PATH_SEPARATOR = '/';
+bool const DEBUG_CONSOLE_CLOSES_WITH_PROCESS = false;
 
 static int DebugFile = -1;
 
@@ -215,5 +216,22 @@ std::vector<std::string> Debug_Command_Line_Arguments(void)
 #else
 #error "Debug_Command_Line_Arguments has no implementation for this system."
 #endif
+}
+
+
+bool Debug_Console_Open(void)
+{
+	return(true);
+}
+
+
+void Debug_Console_Write(char const * text, size_t length)
+{
+	fwrite(text, 1, length, stderr);
+}
+
+
+void Debug_Console_Wait_For_Key(void)
+{
 }
 #endif

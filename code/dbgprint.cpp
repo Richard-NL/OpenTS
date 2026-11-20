@@ -26,9 +26,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cerrno>
-#ifdef _WIN32
-#include <conio.h>
-#endif
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -36,8 +33,6 @@
 #include <mutex>
 #include <string>
 #include <thread>
-
-#define CONSOLE_WINDOW_NAME		"Debug Console"
 
 #ifdef _DEBUG
 static char const BuildType[] = "debug";
@@ -59,7 +54,6 @@ static std::atomic<std::thread::id> DebugLockOwner;
 static bool DebugInitDone = false;
 static bool AtLineStart = true;
 static bool ConsoleActive = false;
-static HANDLE DebugConsole = INVALID_HANDLE_VALUE;
 static char DebugDirectory[MAX_PATH];
 static char DebugFileName[MAX_PATH];
 static unsigned __int64 DebugBytesWritten = 0;
@@ -112,7 +106,7 @@ bool Delete_Files_Older_Than(char const * directory, char const * pattern, unsig
 
 
 /// <summary>
-/// Allocates the console and points the standard streams at it. The caller holds the logging
+/// Opens the console and writes the text logged so far to it. The caller holds the logging
 /// lock.
 /// </summary>
 static void Init_Console_Locked(void)
@@ -121,66 +115,14 @@ static void Init_Console_Locked(void)
 		return;
 	}
 
-	if (!AllocConsole()) {
+	if (!Debug_Console_Open()) {
 		return;
-	}
-
-	SetConsoleTitle(CONSOLE_WINDOW_NAME);
-
-	// A new console decodes output in the OEM page, and the log lines it shows are UTF-8.
-	SetConsoleOutputCP(CP_UTF8);
-	SetConsoleCP(CP_UTF8);
-
-	// Redirecting the standard streams is what lets ordinary stdio output, such as the
-	// command line help, reach the console of a windowed application.
-	FILE * stream = NULL;
-	freopen_s(&stream, "CONOUT$", "w", stdout);
-	freopen_s(&stream, "CONOUT$", "w", stderr);
-	freopen_s(&stream, "CONIN$", "r", stdin);
-
-	HANDLE output = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
-										FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-	HANDLE input = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
-										FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-
-	if (output != INVALID_HANDLE_VALUE) {
-		SetStdHandle(STD_OUTPUT_HANDLE, output);
-		SetStdHandle(STD_ERROR_HANDLE, output);
-	}
-
-	if (input != INVALID_HANDLE_VALUE) {
-		SetStdHandle(STD_INPUT_HANDLE, input);
-	}
-
-	DebugConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (DebugConsole == NULL) {
-		DebugConsole = INVALID_HANDLE_VALUE;
-	}
-
-	if (DebugConsole != INVALID_HANDLE_VALUE) {
-		CONSOLE_SCREEN_BUFFER_INFO info;
-		if (GetConsoleScreenBufferInfo(DebugConsole, &info)) {
-			COORD size;
-			size.X = info.dwSize.X;
-			size.Y = 4096;
-			SetConsoleScreenBufferSize(DebugConsole, size);
-		}
-	}
-
-	// Without this, closing the console window would take the game down with it.
-	HWND console_window = GetConsoleWindow();
-	if (console_window != NULL) {
-		HMENU menu = GetSystemMenu(console_window, FALSE);
-		if (menu != NULL) {
-			DeleteMenu(menu, SC_CLOSE, MF_BYCOMMAND);
-		}
 	}
 
 	ConsoleActive = true;
 
-	if (DebugConsole != INVALID_HANDLE_VALUE && !ConsoleReplay.empty()) {
-		DWORD actual;
-		WriteConsole(DebugConsole, ConsoleReplay.data(), (DWORD)ConsoleReplay.size(), &actual, NULL);
+	if (!ConsoleReplay.empty()) {
+		Debug_Console_Write(ConsoleReplay.data(), ConsoleReplay.size());
 	}
 	std::string().swap(ConsoleReplay);
 }
@@ -253,8 +195,6 @@ static void Init_Locked(void)
 /// </summary>
 static void Write_Text_Locked(char const * text, size_t length)
 {
-	DWORD actual;
-
 	if (Debug_Log_Is_Open()) {
 
 		// The notice is paid for out of the reserve, so the file never passes its limit.
@@ -270,9 +210,7 @@ static void Write_Text_Locked(char const * text, size_t length)
 	Debug_Write_To_Debugger(text);
 
 	if (ConsoleActive) {
-		if (DebugConsole != INVALID_HANDLE_VALUE) {
-			WriteConsole(DebugConsole, text, (DWORD)length, &actual, NULL);
-		}
+		Debug_Console_Write(text, length);
 	} else if (ConsoleReplay.size() + length <= DEBUG_CONSOLE_REPLAY_MAX) {
 		ConsoleReplay.append(text, length);
 	}
@@ -470,17 +408,17 @@ void Debug_Init_Console(void)
 
 
 /// <summary>
-/// Waits for a keypress when the debug console is open, so that text written just before the
-/// process exits stays readable. Does nothing when there is no console.
+/// Waits for a keypress when the debug console is open and its window closes with the process,
+/// so that text written just before the process exits stays readable. Otherwise returns at once.
 /// </summary>
 void Debug_Console_Hold(void)
 {
-	if (!ConsoleActive) {
+	if (!ConsoleActive || !DEBUG_CONSOLE_CLOSES_WITH_PROCESS) {
 		return;
 	}
 
 	DebugString("Press any key to close this window.\n");
-	_getch();
+	Debug_Console_Wait_For_Key();
 }
 
 

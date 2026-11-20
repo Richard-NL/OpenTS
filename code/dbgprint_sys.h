@@ -44,3 +44,12 @@ bool Debug_Executable_Path(char * path, size_t size);
 
 // The command-line arguments after the program name, in UTF-8. Empty when they cannot be read.
 std::vector<std::string> Debug_Command_Line_Arguments(void);
+
+// The debug console. Call the first two with the logging lock held. Opening is false when no
+// console could be opened. Off Windows the console is the standard error stream.
+bool Debug_Console_Open(void);
+void Debug_Console_Write(char const * text, size_t length);
+// True when the console window closes as the process exits, so that a final message needs a
+// keypress to stay readable.
+extern bool const DEBUG_CONSOLE_CLOSES_WITH_PROCESS;
+void Debug_Console_Wait_For_Key(void);

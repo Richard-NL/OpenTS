@@ -16,13 +16,18 @@
 
 #include "dbgprint_sys.h"
 
+#include <conio.h>
 #include <cstdio>
 #include <windows.h>
 #include <shellapi.h>
 
+#define CONSOLE_WINDOW_NAME		"Debug Console"
+
 char const DEBUG_PATH_SEPARATOR = '\\';
+bool const DEBUG_CONSOLE_CLOSES_WITH_PROCESS = true;
 
 static HANDLE DebugFile = INVALID_HANDLE_VALUE;
+static HANDLE DebugConsole = INVALID_HANDLE_VALUE;
 
 unsigned long Debug_Process_ID(void)
 {
@@ -166,5 +171,82 @@ std::vector<std::string> Debug_Command_Line_Arguments(void)
 
 	LocalFree(argv);
 	return(arguments);
+}
+
+
+bool Debug_Console_Open(void)
+{
+	if (!AllocConsole()) {
+		return(false);
+	}
+
+	SetConsoleTitle(CONSOLE_WINDOW_NAME);
+
+	// A new console decodes output in the OEM page, and the log lines it shows are UTF-8.
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+
+	// Redirecting the standard streams is what lets ordinary stdio output, such as the
+	// command line help, reach the console of a windowed application.
+	FILE * stream = NULL;
+	freopen_s(&stream, "CONOUT$", "w", stdout);
+	freopen_s(&stream, "CONOUT$", "w", stderr);
+	freopen_s(&stream, "CONIN$", "r", stdin);
+
+	HANDLE output = CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
+										FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	HANDLE input = CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
+										FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+
+	if (output != INVALID_HANDLE_VALUE) {
+		SetStdHandle(STD_OUTPUT_HANDLE, output);
+		SetStdHandle(STD_ERROR_HANDLE, output);
+	}
+
+	if (input != INVALID_HANDLE_VALUE) {
+		SetStdHandle(STD_INPUT_HANDLE, input);
+	}
+
+	DebugConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (DebugConsole == NULL) {
+		DebugConsole = INVALID_HANDLE_VALUE;
+	}
+
+	if (DebugConsole != INVALID_HANDLE_VALUE) {
+		CONSOLE_SCREEN_BUFFER_INFO info;
+		if (GetConsoleScreenBufferInfo(DebugConsole, &info)) {
+			COORD size;
+			size.X = info.dwSize.X;
+			size.Y = 4096;
+			SetConsoleScreenBufferSize(DebugConsole, size);
+		}
+	}
+
+	// Without this, closing the console window would take the game down with it.
+	HWND console_window = GetConsoleWindow();
+	if (console_window != NULL) {
+		HMENU menu = GetSystemMenu(console_window, FALSE);
+		if (menu != NULL) {
+			DeleteMenu(menu, SC_CLOSE, MF_BYCOMMAND);
+		}
+	}
+
+	return(true);
+}
+
+
+void Debug_Console_Write(char const * text, size_t length)
+{
+	DWORD actual;
+
+	if (DebugConsole != INVALID_HANDLE_VALUE) {
+		WriteConsole(DebugConsole, text, (DWORD)length, &actual, NULL);
+	}
+}
+
+
+void Debug_Console_Wait_For_Key(void)
+{
+	_getch();
 }
 #endif
