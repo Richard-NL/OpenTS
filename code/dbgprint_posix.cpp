@@ -21,6 +21,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#if defined(__APPLE__)
+#include <climits>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <mach-o/dyld.h>
+#elif defined(__FreeBSD__)
+#include <sys/sysctl.h>
+#endif
+
 char const DEBUG_PATH_SEPARATOR = '/';
 
 static int DebugFile = -1;
@@ -118,6 +128,7 @@ bool Debug_Delete_Files_Older_Than(char const * directory, char const * pattern,
 
 bool Debug_Executable_Path(char * path, size_t size)
 {
+#if defined(__linux__)
 	ssize_t const length = readlink("/proc/self/exe", path, size);
 
 	// A full buffer may hold a cut-off path, so it counts as a failure like -1 does.
@@ -126,5 +137,23 @@ bool Debug_Executable_Path(char * path, size_t size)
 	}
 	path[length] = '\0';
 	return(true);
+#elif defined(__APPLE__)
+	char raw[PATH_MAX];
+	uint32_t raw_size = sizeof(raw);
+	char resolved[PATH_MAX];
+
+	// Resolve symbolic links so the log folder sits beside the real file, as on Linux.
+	if (_NSGetExecutablePath(raw, &raw_size) != 0 || realpath(raw, resolved) == nullptr) {
+		return(false);
+	}
+	int const length = snprintf(path, size, "%s", resolved);
+	return(length >= 0 && static_cast<size_t>(length) < size);
+#elif defined(__FreeBSD__)
+	int const request[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+	size_t length = size;
+	return(sysctl(request, 4, path, &length, nullptr, 0) == 0);
+#else
+#error "Debug_Executable_Path has no implementation for this system."
+#endif
 }
 #endif
