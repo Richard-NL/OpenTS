@@ -17,17 +17,21 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <fstream>
+#include <istream>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #if defined(__APPLE__)
 #include <climits>
+#include <crt_externs.h>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <mach-o/dyld.h>
 #elif defined(__FreeBSD__)
+#include <sstream>
 #include <sys/sysctl.h>
 #endif
 
@@ -154,6 +158,62 @@ bool Debug_Executable_Path(char * path, size_t size)
 	return(sysctl(request, 4, path, &length, nullptr, 0) == 0);
 #else
 #error "Debug_Executable_Path has no implementation for this system."
+#endif
+}
+
+
+#if defined(__linux__) || defined(__FreeBSD__)
+// Reads arguments that each end with '\0', and drops the first one, the program name.
+static std::vector<std::string> Read_Arguments(std::istream & input)
+{
+	std::vector<std::string> arguments;
+	std::string argument;
+
+	while (std::getline(input, argument, '\0')) {
+		arguments.push_back(argument);
+	}
+
+	if (!arguments.empty()) {
+		arguments.erase(arguments.begin());
+	}
+	return(arguments);
+}
+#endif
+
+
+std::vector<std::string> Debug_Command_Line_Arguments(void)
+{
+#if defined(__linux__)
+	std::ifstream file("/proc/self/cmdline", std::ios::binary);
+	return(Read_Arguments(file));
+#elif defined(__APPLE__)
+	std::vector<std::string> arguments;
+	int const argc = *_NSGetArgc();
+	char ** const argv = *_NSGetArgv();
+
+	// Index zero is the executable path, which may itself look like an option.
+	for (int index = 1; index < argc; index++) {
+		arguments.push_back(argv[index]);
+	}
+	return(arguments);
+#elif defined(__FreeBSD__)
+	int const request[] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, static_cast<int>(getpid()) };
+	size_t size = 0;
+
+	// The first call asks for the size, the second fills the text.
+	if (sysctl(request, 4, nullptr, &size, nullptr, 0) != 0) {
+		return(std::vector<std::string>());
+	}
+	std::string block(size, '\0');
+	if (sysctl(request, 4, block.data(), &size, nullptr, 0) != 0) {
+		return(std::vector<std::string>());
+	}
+	block.resize(size);
+
+	std::istringstream text(block);
+	return(Read_Arguments(text));
+#else
+#error "Debug_Command_Line_Arguments has no implementation for this system."
 #endif
 }
 #endif

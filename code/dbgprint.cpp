@@ -75,33 +75,21 @@ static std::string ConsoleReplay;
 /// </summary>
 static bool Command_Line_Requests_Console(void)
 {
-	int argc = 0;
-	LPWSTR * argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	for (std::string const & argument : Debug_Command_Line_Arguments()) {
+		char const * token = argument.c_str();
 
-	if (argv == NULL) {
-		return(false);
-	}
-
-	bool requested = false;
-
-	// Index zero is the executable path, which may itself look like an option.
-	for (int index = 1; index < argc && !requested; index++) {
-		wchar_t const * token = argv[index];
-
-		if (token[0] != L'-' || (token[1] != L'X' && token[1] != L'x')) {
+		if (token[0] != '-' || (token[1] != 'X' && token[1] != 'x')) {
 			continue;
 		}
 
-		for (wchar_t const * code = token + 2; *code != L'\0'; code++) {
-			if (*code == L'C' || *code == L'c') {
-				requested = true;
-				break;
+		for (char const * code = token + 2; *code != '\0'; code++) {
+			if (*code == 'C' || *code == 'c') {
+				return(true);
 			}
 		}
 	}
 
-	LocalFree(argv);
-	return(requested);
+	return(false);
 }
 
 

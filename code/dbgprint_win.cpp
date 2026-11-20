@@ -18,6 +18,7 @@
 
 #include <cstdio>
 #include <windows.h>
+#include <shellapi.h>
 
 char const DEBUG_PATH_SEPARATOR = '\\';
 
@@ -138,5 +139,32 @@ bool Debug_Delete_Files_Older_Than(char const * directory, char const * pattern,
 bool Debug_Executable_Path(char * path, size_t size)
 {
 	return(GetModuleFileName(GetModuleHandle(NULL), path, static_cast<DWORD>(size)) != 0);
+}
+
+
+std::vector<std::string> Debug_Command_Line_Arguments(void)
+{
+	std::vector<std::string> arguments;
+	int argc = 0;
+	LPWSTR * argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
+	if (argv == NULL) {
+		return(arguments);
+	}
+
+	// Index zero is the executable path, which may itself look like an option.
+	for (int index = 1; index < argc; index++) {
+		int const length = WideCharToMultiByte(CP_UTF8, 0, argv[index], -1, NULL, 0, NULL, NULL);
+		if (length <= 0) {
+			continue;
+		}
+
+		std::string argument(static_cast<size_t>(length - 1), '\0');
+		WideCharToMultiByte(CP_UTF8, 0, argv[index], -1, argument.data(), length, NULL, NULL);
+		arguments.push_back(argument);
+	}
+
+	LocalFree(argv);
+	return(arguments);
 }
 #endif
